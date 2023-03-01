@@ -179,7 +179,7 @@ class QuizViewModel : ViewModel() {
 
     fun setOptionImageFromGallery(questionId: Int, optionId: Int, optionImage: Uri) {
         val questionList = viewModelState.value.questions
-        val question = questionList[questionId-1]
+        val question = questionList[questionId]
         val option = question.options?.get(optionId)
         if (option != null) {
             option.optionImage = optionImage.toString()

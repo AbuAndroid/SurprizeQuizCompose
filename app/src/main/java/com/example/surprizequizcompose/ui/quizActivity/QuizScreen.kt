@@ -81,6 +81,7 @@ fun QuizScreen(
     deleteOption: (Int, Int) -> Unit
 ) {
     requestPermission()
+    val questionForSetAnswerKey: MutableState<Int?> = remember { mutableStateOf(null) }
     val context = LocalContext.current
     val imageUri: Uri? = initTempUri(context)
     var capturedImageUri by remember {
@@ -92,6 +93,7 @@ fun QuizScreen(
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
             if (imageUri != null) {
                 capturedImageUri = imageUri
+
             }
         }
 
@@ -105,6 +107,11 @@ fun QuizScreen(
     val requestQuestionImageFromGallery =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             imageUriState.value = uri
+            questionForSetAnswerKey.value?.let { it1 ->
+                if (uri != null) {
+                    getQuestionImageFromGallery(it1,uri)
+                }
+            }
         }
 
     val requestOptionImageFromGallery =
@@ -112,7 +119,7 @@ fun QuizScreen(
             imageUriState.value = uri
         }
 
-    val questionForSetAnswerKey: MutableState<Int?> = remember { mutableStateOf(null) }
+
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
@@ -133,10 +140,15 @@ fun QuizScreen(
 
             GetImageBottomSheet(
                 getImageFromCamera = {
-
+                    requestQuestionImageCamera.launch(imageUri)
+                    questionForSetAnswerKey.value?.let {
+                        if (imageUri != null) {
+                            getQuestionImageFromGallery(it,imageUri)
+                        }
+                    }
                 },
                 getImageFromGallery = {
-
+                    requestQuestionImageFromGallery.launch("image/*")
                 }
             )
         },
@@ -191,7 +203,12 @@ fun QuizScreen(
                             deleteOption(questionId, optionId)
                         },
                         openQuestionImageBottomSheet = {questionId->
-                            requestQuestionImageCamera.launch(imageUri)
+                            questionForSetAnswerKey.value = questionId
+                            coroutineScope.launch {
+                                if (sheetState.bottomSheetState.isCollapsed)
+                                    sheetState.bottomSheetState.expand()
+                            }
+
                         }
                     )
                 }
@@ -237,8 +254,8 @@ fun requestPermission() {
 fun initTempUri(context: Context): Uri? {
     val tempImagesDir = File(context.filesDir, "temp_images")
     tempImagesDir.mkdir()
-    val tempImage = File(tempImagesDir, "temp_image.jpg")
-    return FileProvider.getUriForFile(context, "com.example.surprizequizcompose", tempImage)
+    val tempImage = File(tempImagesDir, "${System.currentTimeMillis()}.jpg")
+    return FileProvider.getUriForFile(context, "com.example.surprizequizcompose.provider", tempImage)
 }
 
 @Preview(showBackground = true)
