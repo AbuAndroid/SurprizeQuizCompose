@@ -18,3 +18,7 @@ val buttonGradient = Brush.linearGradient(
         Color(0xFFE1F5FA)
     )
 )
+
+val cardBackground = Color(0xFFFFFFFF)
+val bottomBackground = Color(0xFFF8F8F8)
+val buttonBackground = Color(0XFF147AFC)
