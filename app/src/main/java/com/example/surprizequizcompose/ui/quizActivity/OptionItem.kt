@@ -8,8 +8,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,12 +24,13 @@ import com.example.surprizequizcompose.R
 @Composable
 fun OptionItemPreview() {
     OptionItem(
-        optionPosition=0,
+        optionPosition = 0,
         option = OptionsUiModel(
             optionId = 1,
             text = "Option 1",
             isSelected = false,
-            optionImage = ""
+            optionImage = "",
+            lastUpdate = 1
         ),
         onOptionSelected = { },
         onOptionEnter = {},
@@ -36,20 +39,22 @@ fun OptionItemPreview() {
     )
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OptionItem(
-    optionPosition:Int,
+    optionPosition: Int,
     option: OptionsUiModel,
     onOptionSelected: () -> Unit,
     onOptionEnter: (String) -> Unit,
     getOptionImage: () -> Unit,
     deleteOption: () -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Column {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 5.dp),
+                .fillMaxWidth(1f)
+                .padding(horizontal = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             option.isSelected?.let {
@@ -58,19 +63,21 @@ fun OptionItem(
                     enabled = false,
                     onClick = {
                         onOptionSelected()
-                    })
+                    },
+                    modifier = Modifier.offset(x=20.dp,y=0.dp),
+                )
             }
             TextField(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(10.dp),
-                textStyle = TextStyle(fontSize = 18.sp),
+                    .padding(horizontal =  10.dp),
+                textStyle = TextStyle(fontSize = 15.sp),
                 value = option.text.toString(),
                 onValueChange = { optionText ->
                     onOptionEnter(optionText)
                 },
                 placeholder = {
-                    Text(text = "Option ${optionPosition+1}")
+                    Text(text = "Option ")
                 },
                 colors = TextFieldDefaults.textFieldColors(
                     backgroundColor = Color.Transparent,
@@ -81,7 +88,10 @@ fun OptionItem(
                     placeholderColor = Color.Gray
                 )
             )
-            IconButton(onClick = {
+            IconButton(
+                modifier = Modifier.width(20.dp),
+                onClick = {
+                    keyboardController?.hide()
                 getOptionImage()
             }) {
                 Icon(

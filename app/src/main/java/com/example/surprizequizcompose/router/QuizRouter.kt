@@ -1,8 +1,11 @@
 package com.example.surprizequizcompose.router
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.activity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,9 +18,10 @@ fun QuizRouter(
 ) {
     val uiState by quizViewModel.uiState.collectAsState()
     val navController = rememberNavController()
-
+    val activity = (LocalContext.current as Activity)
     NavHost(navController = navController, startDestination = "Quiz_screen") {
         composable("Quiz_screen") {
+
             QuizScreen(
                 quizTitle = uiState.quizTitle,
                 question = uiState.questions,
@@ -51,13 +55,16 @@ fun QuizRouter(
                 getQuestionImageFromGallery = { questionId, questionImage->
                     quizViewModel.setQuestionImageFromGallery(questionId,questionImage)
                 },
-                getOptionImageFromGallery = { optionId, questionId, optionImage->
+                getOptionImageFromGallery = { questionId, optionId, optionImage->
                     quizViewModel.setOptionImageFromGallery(questionId,optionId,optionImage)
+                },
+                deleteOption = { questionId, optionId ->
+                    quizViewModel.deleteOption(questionId, optionId)
+                },
+                closeApplication = {
+                    activity.finish()
                 }
-            ) { questionId, optionId ->
-                quizViewModel.deleteOption(questionId, optionId)
-            }
+            )
         }
     }
-
 }

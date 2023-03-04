@@ -8,11 +8,16 @@ import kotlinx.coroutines.flow.*
 
 class QuizViewModel : ViewModel() {
 
+
     private val viewModelState = MutableStateFlow(QuizViewModelState())
 
     val uiState = viewModelState.map { it.toUiState() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, viewModelState.value.toUiState())
 
+    init {
+        addQuestion()
+//        addQuestion()
+    }
     fun onQuizTitleEnter(quizTitle: String) {
         viewModelState.update { it.copy(quizTitle = quizTitle) }
     }
@@ -48,10 +53,26 @@ class QuizViewModel : ViewModel() {
 
     fun addQuestion() {
         val quizList = uiState.value.questions
+        val options = mutableListOf(
+            OptionsUiModel(
+                optionId = System.currentTimeMillis(),
+                text = "",
+                lastUpdate = System.currentTimeMillis(),
+                optionImage = "",
+                isSelected = false
+            ),
+            OptionsUiModel(
+                optionId = System.currentTimeMillis(),
+                text = "",
+                lastUpdate = System.currentTimeMillis(),
+                optionImage = "",
+                isSelected = false
+            )
+        )
         val question = QuestionsUiModel(
             questionId = System.currentTimeMillis() ,
             questionName = "",
-            options = mutableListOf(),
+            options = options,
             lastUpdate = System.currentTimeMillis(),
             questionImage = ""
         )
@@ -78,14 +99,29 @@ class QuizViewModel : ViewModel() {
     @SuppressLint("SuspiciousIndentation")
     fun addQuestionBelow(questionId: Int) {
         val questionList = viewModelState.value.questions
+        val options = mutableListOf(
+            OptionsUiModel(
+                optionId = System.currentTimeMillis(),
+                text = "",
+                lastUpdate = System.currentTimeMillis(),
+                optionImage = "",
+                isSelected = false
+            ),
+            OptionsUiModel(
+                optionId = System.currentTimeMillis(),
+                text = "",
+                lastUpdate = System.currentTimeMillis(),
+                optionImage = "",
+                isSelected = false
+            )
+        )
         val question = QuestionsUiModel(
             questionId = System.currentTimeMillis(),
             questionName = "",
-            options = mutableListOf(),
+            options = options,
             lastUpdate = System.currentTimeMillis(),
             questionImage = ""
         )
-
         questionList.add(questionId+1, question)
         viewModelState.update {
             it.copy(
@@ -97,12 +133,13 @@ class QuizViewModel : ViewModel() {
 
     fun copyQuestionBelow(questionId: Int, question: QuestionsUiModel) {
         val questionList = viewModelState.value.questions
-        val optionList = question.options?.mapIndexed { index, option ->
+        val optionList = question.options?.map { option ->
             OptionsUiModel(
-                optionId = System.currentTimeMillis()+index ,
+                optionId = option.optionId ,
                 text = option.text,
                 isSelected = option.isSelected,
-                optionImage = option.optionImage
+                optionImage = option.optionImage,
+                lastUpdate = System.currentTimeMillis()
             )
         }
         val questionCard = QuestionsUiModel(
@@ -112,13 +149,9 @@ class QuizViewModel : ViewModel() {
             options = optionList?.toMutableList(),
             lastUpdate = System.currentTimeMillis()
         )
-
         questionList.add(questionId+1, questionCard)
         viewModelState.update {
-            it.copy(
-                questions = questionList,
-                lastUpdate = System.currentTimeMillis()
-            )
+            it.copy(questions = questionList, lastUpdate = System.currentTimeMillis())
         }
     }
 
@@ -130,13 +163,13 @@ class QuizViewModel : ViewModel() {
                 optionId = it.toLong() ,
                 text = "",
                 isSelected = false,
-                optionImage = ""
+                optionImage = "",
+                lastUpdate = System.currentTimeMillis()
             )
         }
         if (option != null) {
             question.options.add(option)
         }
-
         viewModelState.update {
             it.copy(
                 questions = questionList,
@@ -157,7 +190,6 @@ class QuizViewModel : ViewModel() {
         val question = questionList[questionId]
         val option = question.options?.get(optionId)
         option?.text = optionText
-
         viewModelState.update {
             it.copy(
                 questions = questionList,
@@ -228,5 +260,6 @@ data class OptionsUiModel(
     val optionId: Long,
     var text: String?,
     var optionImage: String,
+    val lastUpdate: Long,
     var isSelected: Boolean?
 )
